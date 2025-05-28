@@ -1,6 +1,10 @@
 <?php
-// Encabezado para respuesta JSON
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', 'error_log.txt');
+error_reporting(E_ALL);
 header('Content-Type: application/json');
+
 
 // Recibir entrada bruta
 $raw_input = file_get_contents('php://input');
