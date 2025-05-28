@@ -41,3 +41,10 @@ if (isset($input['event']) && $input['event'] === 'message_created') {
 // Si no es un evento relevante, responder neutro
 echo json_encode(['content' => 'Evento recibido, sin acción.']);
 exit;
+// Mostrar también en consola
+error_log("🟡 Entrada cruda: " . $raw_input);
+error_log("✅ JSON decodificado: " . json_encode($input, JSON_PRETTY_PRINT));
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    error_log("❌ Error de JSON: " . json_last_error_msg());
+}
