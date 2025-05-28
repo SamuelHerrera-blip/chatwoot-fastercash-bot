@@ -1,45 +1,48 @@
 <?php
+// Encabezado para respuesta JSON
 header('Content-Type: application/json');
 
-// Capturar entrada cruda
+// Recibir entrada bruta
 $raw_input = file_get_contents('php://input');
-error_log("🟡 Entrada cruda: " . $raw_input);
+file_put_contents('log.txt', "🟡 Entrada cruda: $raw_input\n", FILE_APPEND);
 
 // Decodificar JSON
 $input = json_decode($raw_input, true);
-error_log("✅ JSON decodificado: " . json_encode($input, JSON_PRETTY_PRINT));
+file_put_contents('log.txt', "✅ JSON decodificado: " . json_encode($input, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
 
-// Verificar error en JSON
-if (json_last_error() !== JSON_ERROR_NONE) {
-    error_log("❌ Error de JSON: " . json_last_error_msg());
+// Validar que el JSON y los campos existan
+if (!is_array($input) || !isset($input['event']) || $input['event'] !== 'message_created') {
+    file_put_contents('log.txt', "⚠️ Faltan campos esperados en el payload.\n", FILE_APPEND);
     http_response_code(400);
-    echo json_encode(['error' => 'JSON inválido']);
+    echo json_encode(['error' => 'Payload inválido o sin evento válido.']);
     exit;
 }
 
-// Validar campos necesarios
-if (!isset($input['content']) || !isset($input['conversation']['meta']['sender']['phone_number'])) {
-    error_log("⚠️ Faltan campos esperados en el payload.");
+// Extraer datos
+$message = $input['content'] ?? '';
+$phone   = $input['sender']['phone_number'] ?? '';
+$name    = $input['sender']['name'] ?? '';
+$inbox   = $input['inbox']['id'] ?? null;
+
+// Validar campos clave
+if (!$message || !$phone || !$inbox) {
+    file_put_contents('log.txt', "❌ Campos esenciales ausentes (mensaje, teléfono o inbox).\n", FILE_APPEND);
     http_response_code(422);
-    echo json_encode(['error' => 'Faltan campos']);
+    echo json_encode(['error' => 'Faltan campos esenciales.']);
     exit;
 }
 
-// Leer contenido del mensaje
-$mensaje = strtolower(trim($input['content']));
-error_log("📨 Mensaje recibido: " . $mensaje);
+file_put_contents('log.txt', "📨 Mensaje recibido: $message de $phone ($name)\n", FILE_APPEND);
 
-// Lógica básica del bot
-if (strpos($mensaje, 'cliente') !== false) {
-    $respuesta = "Entendido. En breve te apoyaremos como cliente actual. 🧾";
-} elseif (strpos($mensaje, 'nuevo') !== false || strpos($mensaje, 'quiero') !== false) {
-    $respuesta = "Gracias por tu interés. Por favor llena la solicitud en fastercash.app 🚀";
-} else {
-    $respuesta = "Hola, soy el bot de Faster Cash 🤖. ¿Ya eres cliente? Escribe: 'Soy cliente' o 'No soy cliente'.";
-}
+// Construir respuesta automática
+$response_text = "¡Hola $name! 👋 Gracias por escribirnos. Soy el asistente de Faster Cash y te apoyaré en lo que pueda.";
 
-// Enviar respuesta a Chatwoot
-echo json_encode([
-    'content' => $respuesta
-], JSON_PRETTY_PRINT);
+// Preparar respuesta
+$response = [
+    'content' => $response_text,
+];
+
+// Responder
+file_put_contents('log.txt', "✅ Respondido con: $response_text\n", FILE_APPEND);
+echo json_encode($response);
 exit;
