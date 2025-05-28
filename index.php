@@ -1,24 +1,31 @@
 <?php
 header('Content-Type: application/json');
 
-// Recibir JSON
+// Recibir el JSON
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Extraer mensaje del usuario
+// Guardar log en archivo local
+file_put_contents("log.txt", json_encode($input, JSON_PRETTY_PRINT) . PHP_EOL, FILE_APPEND);
+
+// Procesar el mensaje
 $msg = strtolower(trim($input['content'] ?? ''));
 
-// Generar respuesta
 switch ($msg) {
     case '1':
         $reply = "Consulta tu cuenta aquí: https://fastercash.mx";
         break;
     case '2':
-        $reply = "Tiempo promedio de aprobación: 2 horas.";
+        $reply = "Pronto estaremos contigo.";
         break;
     default:
-        $reply = "Hola 👋, responde con:\n1️⃣ Ya soy cliente\n2️⃣ Todavía no soy cliente";
-        break;
+        $reply = "Escribe 1 para ver tu cuenta o 2 para esperar a un asesor.";
 }
+
+// Devolver respuesta al Webhook
+echo json_encode([
+    'content' => $reply
+]);
+exit;
 
 // Responder a Chatwoot
 echo json_encode([
