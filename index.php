@@ -1,50 +1,36 @@
 <?php
-// Forzar salida como JSON
+// Establece cabecera de respuesta
 header('Content-Type: application/json');
 
-// Capturar entrada cruda
+// Captura la entrada cruda
 $raw_input = file_get_contents('php://input');
-
-// Intentar decodificar JSON
-$input = json_decode($raw_input, true);
-
-// Guardar todo el JSON recibido en log.txt (para depuración)
-file_put_contents("log.txt", json_encode([
-    'timestamp' => date('Y-m-d H:i:s'),
-    'input_raw' => $raw_input,
-    'input_decoded' => $input
-], JSON_PRETTY_PRINT) . PHP_EOL, FILE_APPEND);
-
-// Si el JSON no se decodificó correctamente, registrar error
-if (json_last_error() !== JSON_ERROR_NONE) {
-    file_put_contents("error_log.txt", date('Y-m-d H:i:s') . " ❌ Error al decodificar JSON: " . json_last_error_msg() . PHP_EOL, FILE_APPEND);
-    echo json_encode(['content' => 'Error: JSON inválido.']);
-    exit;
-}
-
-// Validar que haya evento de tipo "message_created"
-if (isset($input['event']) && $input['event'] === 'message_created') {
-    // Opcional: puedes validar también que no venga de un bot (para evitar loops)
-    $from_bot = $input['message']['sender']['type'] ?? '';
-    if ($from_bot === 'bot') {
-        echo json_encode(['content' => 'Ignorado: mensaje de bot.']);
-        exit;
-    }
-
-    // Ejemplo de respuesta
-    echo json_encode([
-        'content' => 'Hola, soy el asistente automático. ¿En qué puedo ayudarte?'
-    ]);
-    exit;
-}
-
-// Si no es un evento relevante, responder neutro
-echo json_encode(['content' => 'Evento recibido, sin acción.']);
-exit;
-// Mostrar también en consola
 error_log("🟡 Entrada cruda: " . $raw_input);
+
+// Intenta decodificar
+$input = json_decode($raw_input, true);
 error_log("✅ JSON decodificado: " . json_encode($input, JSON_PRETTY_PRINT));
 
+// Valida si hubo error
 if (json_last_error() !== JSON_ERROR_NONE) {
     error_log("❌ Error de JSON: " . json_last_error_msg());
+    http_response_code(400);
+    echo json_encode(['error' => 'JSON inválido']);
+    exit;
 }
+
+// Verifica si es un evento válido (mensaje entrante)
+if (!isset($input['content']) || !isset($input['conversation']['meta']['sender']['phone_number'])) {
+    error_log("⚠️ Faltan campos esperados en el payload.");
+    http_response_code(422);
+    echo json_encode(['error' => 'Faltan campos']);
+    exit;
+}
+
+// Simula una respuesta del bot
+$response = [
+    'content' => "Hola, soy el bot de Faster Cash 🤖. En breve te atenderemos."
+];
+
+// Devuelve respuesta simulada
+echo json_encode($response, JSON_PRETTY_PRINT);
+exit;
