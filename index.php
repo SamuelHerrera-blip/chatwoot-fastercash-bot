@@ -1,30 +1,26 @@
 <?php
 header('Content-Type: application/json');
 
+// Recibir JSON
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Guardar log para debug
-file_put_contents("log.txt", json_encode($input) . PHP_EOL, FILE_APPEND);
-
-// Obtener mensaje del usuario
+// Extraer mensaje del usuario
 $msg = strtolower(trim($input['content'] ?? ''));
 
-// Lógica básica de respuesta
+// Generar respuesta
 switch ($msg) {
     case '1':
         $reply = "Consulta tu cuenta aquí: https://fastercash.mx";
         break;
     case '2':
-        $reply = "Puedes renovar tu beneficio después de liquidar el anterior.";
+        $reply = "Tiempo promedio de aprobación: 2 horas.";
         break;
     default:
-        $reply = "Responde con:\n1. Ya soy cliente\n2. Renovar beneficio";
+        $reply = "Hola 👋, responde con:\n1️⃣ Ya soy cliente\n2️⃣ Todavía no soy cliente";
         break;
 }
 
-// Enviar respuesta en formato que espera Chatwoot
+// Responder a Chatwoot
 echo json_encode([
-    "content" => $reply,
+    'content' => $reply
 ]);
-exit;
-
