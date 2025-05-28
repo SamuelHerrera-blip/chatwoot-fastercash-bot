@@ -1,7 +1,6 @@
 services:
   - type: web
     name: chatwoot-fastercash-bot
-    env: php
+    env: docker
     plan: free
-    buildCommand: ""
-    startCommand: "php -S 0.0.0.0:10000 -t ."
+
